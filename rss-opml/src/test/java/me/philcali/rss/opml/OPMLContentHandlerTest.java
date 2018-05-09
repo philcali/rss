@@ -33,6 +33,7 @@ public class OPMLContentHandlerTest {
         
         final IFeedExport expectedFeed = FeedExport.builder()
                 .withTitle("My Test Feed")
+                .withVersion("1.0")
                 .withFeeds(Feed.builder()
                         .withText("Outline1 text")
                         .withTitle("Outline1 title")

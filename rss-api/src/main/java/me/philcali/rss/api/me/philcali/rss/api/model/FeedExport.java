@@ -19,14 +19,21 @@ import me.philcali.rss.api.IFeedRepository;
 
 public class FeedExport implements IFeedExport, IFeedRepository {
     private String title;
+    private String version;
     private List<IFeed> feeds;
     
     public static class Builder implements IFeedCollector<FeedExport.Builder> {
         private String title;
+        private String version;
         private List<IFeed> feeds = new ArrayList<>();
         
         public Builder withTitle(final String title) {
             this.title = title;
+            return this;
+        }
+        
+        public Builder withVersion(final String version) {
+            this.version = version;
             return this;
         }
         
@@ -56,6 +63,7 @@ public class FeedExport implements IFeedExport, IFeedRepository {
     private FeedExport(final Builder builder) {
         this.title = builder.title;
         this.feeds = builder.feeds;
+        this.version = builder.version;
     }
 
     @Override
@@ -66,6 +74,11 @@ public class FeedExport implements IFeedExport, IFeedRepository {
     @Override
     public List<IFeed> getFeeds() {
         return feeds;
+    }
+    
+    @Override
+    public String getVersion() {
+        return version;
     }
 
     @Override
@@ -89,8 +102,10 @@ public class FeedExport implements IFeedExport, IFeedRepository {
             return feed.getXmlUrl();
         case "htmlUrl":
             return feed.getHtmlUrl();
-        default:
+        case "title":
             return feed.getTitle();
+        default:
+            return feed.getText();
         }
     }
     
@@ -123,16 +138,18 @@ public class FeedExport implements IFeedExport, IFeedRepository {
         }
         
         final IFeedExport export = (IFeedExport) obj;
-        return Objects.equals(title, export.getTitle()) && Objects.equals(feeds, export.getFeeds());
+        return Objects.equals(title, export.getTitle())
+                && Objects.equals(version, export.getVersion())
+                && Objects.equals(feeds, export.getFeeds());
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(title, feeds);
+        return Objects.hash(title, version, feeds);
     }
     
     @Override
     public String toString() {
-        return "FeedExport [title=" + title + ", feeds=" + feeds + "]";
+        return "FeedExport [title=" + title + ", version=" + version + ", feeds=" + feeds + "]";
     }
 }

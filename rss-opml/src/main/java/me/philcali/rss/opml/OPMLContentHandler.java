@@ -1,5 +1,6 @@
 package me.philcali.rss.opml;
 
+import java.util.Optional;
 import java.util.Stack;
 
 import me.philcali.rss.api.IFeedCollector;
@@ -42,6 +43,9 @@ public class OPMLContentHandler extends DefaultHandler {
         final String tagUpper = qName.toUpperCase();
         elements.push(tagUpper);
         switch (tagUpper) {
+        case "OPML":
+            Optional.ofNullable(attributes.getValue(0)).ifPresent(builder::withVersion);
+            break;
         case "OUTLINE":
             final Feed.Builder feedBuilder = Feed.builder();
             for (int i = 0; i < attributes.getLength(); i++) {
