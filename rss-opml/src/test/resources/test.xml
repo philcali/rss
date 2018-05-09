@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml>
+<head>
+<title>My Test Feed</title>
+</head>
+<body>
+<outline text="Outline1 text" title="Outline1 title">
+    <outline text="Child1 text" xmlUrl="https://example.com/xml"/>
+</outline>
+<outline text="Outline2 text" title="Outline2 title">
+    <outline text="Child1 text" htmlUrl="https://example.com/html"/>
+</outline>
+</body>
+</opml>
