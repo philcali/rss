@@ -13,6 +13,8 @@
   <modules>
     <module>rss-api</module>
     <module>rss-opml</module>
+    <module>rss-service</module>
+    <module>rss-dynamo</module>
   </modules>
 
   <properties>

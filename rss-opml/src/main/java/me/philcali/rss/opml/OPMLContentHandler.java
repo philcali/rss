@@ -3,20 +3,20 @@ package me.philcali.rss.opml;
 import java.util.Optional;
 import java.util.Stack;
 
-import me.philcali.rss.api.IFeedCollector;
-import me.philcali.rss.api.me.philcali.rss.api.model.Feed;
-import me.philcali.rss.api.me.philcali.rss.api.model.FeedExport;
+import me.philcali.rss.api.ompl.IOutlineCollector;
+import me.philcali.rss.api.ompl.model.Document;
+import me.philcali.rss.api.ompl.model.Outline;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class OPMLContentHandler extends DefaultHandler {
-    private final Stack<IFeedCollector<?>> collectors;
+    private final Stack<IOutlineCollector<?>> collectors;
     private final Stack<String> elements;
-    private final FeedExport.Builder builder;
+    private final Document.Builder builder;
     
-    public OPMLContentHandler(final FeedExport.Builder builder) {
+    public OPMLContentHandler(final Document.Builder builder) {
         this.builder = builder;
         this.collectors = new Stack<>();
         this.elements = new Stack<>();
@@ -47,7 +47,7 @@ public class OPMLContentHandler extends DefaultHandler {
             Optional.ofNullable(attributes.getValue(0)).ifPresent(builder::withVersion);
             break;
         case "OUTLINE":
-            final Feed.Builder feedBuilder = Feed.builder();
+            final Outline.Builder feedBuilder = Outline.builder();
             for (int i = 0; i < attributes.getLength(); i++) {
                 final String value = attributes.getValue(i);
                 switch (attributes.getQName(i)) {
@@ -77,8 +77,8 @@ public class OPMLContentHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         switch (qName.toUpperCase()) {
         case "OUTLINE":
-            final Feed.Builder collector = (Feed.Builder) collectors.pop();
-            collectors.peek().withFeeds(collector.build());
+            final Outline.Builder collector = (Outline.Builder) collectors.pop();
+            collectors.peek().withOutlines(collector.build());
         }
     }
 }

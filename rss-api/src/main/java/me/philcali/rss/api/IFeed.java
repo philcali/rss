@@ -1,12 +1,13 @@
 package me.philcali.rss.api;
 
-import java.util.List;
+import java.util.Date;
+import java.util.Map;
 
 public interface IFeed {
-    List<IFeed> getFeeds();
-    String getType();
+    String getId();
     String getTitle();
-    String getText();
-    String getHtmlUrl();
-    String getXmlUrl();
+    String getDescription();
+    String getUrl();
+    Date getUpdatedAt();
+    Map<String, String> getMetadata();
 }

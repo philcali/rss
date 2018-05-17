@@ -1,21 +1,21 @@
-package me.philcali.rss.api.me.philcali.rss.api.model;
+package me.philcali.rss.api.ompl.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import me.philcali.rss.api.IFeed;
-import me.philcali.rss.api.IFeedCollector;
+import me.philcali.rss.api.ompl.IOutline;
+import me.philcali.rss.api.ompl.IOutlineCollector;
 
-public class Feed implements IFeed {
+public class Outline implements IOutline {
     private String title;
     private String text;
     private String xmlUrl;
     private String htmlUrl;
     private String type;
-    private List<IFeed> feeds;
-
+    private List<IOutline> outlines;
+    
     public void setTitle(final String title) {
         this.title = title;
     }
@@ -36,17 +36,17 @@ public class Feed implements IFeed {
         this.xmlUrl = xmlUrl;
     }
 
-    public void setFeeds(final List<IFeed> feeds) {
-        this.feeds = feeds;
+    public void setOutlines(final List<IOutline> outlines) {
+        this.outlines = outlines;
     }
     
-    public static class Builder implements IFeedCollector<Feed.Builder> {
+    public static class Builder implements IOutlineCollector<Outline.Builder> {
         private String title;
         private String text;
         private String type;
         private String xmlUrl;
         private String htmlUrl;
-        private List<IFeed> feeds = new ArrayList<>();
+        private List<IOutline> outlines = new ArrayList<>();
         
         public Builder withTitle(final String title) {
             this.title = title;
@@ -74,13 +74,13 @@ public class Feed implements IFeed {
         }
         
         @Override
-        public Builder withFeeds(final IFeed ... feeds) {
-            this.feeds.addAll(Arrays.asList(feeds));
+        public Builder withOutlines(final IOutline... feeds) {
+            this.outlines.addAll(Arrays.asList(feeds));
             return this;
         }
         
-        public IFeed build() {
-            return new Feed(this);
+        public IOutline build() {
+            return new Outline(this);
         }
     }
     
@@ -88,18 +88,18 @@ public class Feed implements IFeed {
         return new Builder();
     }
     
-    public Feed() {
+    public Outline() {
     }
     
-    private Feed(final Builder builder) {
-        setFeeds(builder.feeds);
+    private Outline(final Builder builder) {
+        setOutlines(builder.outlines);
         setHtmlUrl(builder.htmlUrl);
         setXmlUrl(builder.xmlUrl);
         setText(builder.text);
         setTitle(builder.title);
         setType(builder.type);
     }
-
+    
     @Override
     public String getText() {
         return text;
@@ -126,37 +126,37 @@ public class Feed implements IFeed {
     }
 
     @Override
-    public List<IFeed> getFeeds() {
-        return feeds;
+    public List<IOutline> getOutlines() {
+        return outlines;
     }
     
     @Override
     public boolean equals(final Object obj) {
-        if (Objects.isNull(obj) || !(obj instanceof IFeed)) {
+        if (Objects.isNull(obj) || !(obj instanceof IOutline)) {
             return false;
         }
         
-        final IFeed other = (IFeed) obj;
+        final IOutline other = (IOutline) obj;
         return Objects.equals(text, other.getText())
                 && Objects.equals(title, other.getTitle())
                 && Objects.equals(type, other.getType())
                 && Objects.equals(xmlUrl, other.getXmlUrl())
                 && Objects.equals(htmlUrl, other.getHtmlUrl())
-                && Objects.equals(feeds, other.getFeeds());
+                && Objects.equals(outlines, other.getOutlines());
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(text, title, type, xmlUrl, htmlUrl, feeds);
+        return Objects.hash(text, title, type, xmlUrl, htmlUrl, outlines);
     }
     
     @Override
     public String toString() {
-        return "Feed[title=" + title 
+        return "Outline[title=" + title 
                 + ", text=" + text
                 + ", type=" + type
                 + ", xmlUrl=" + xmlUrl
                 + ", htmlUrl=" + htmlUrl
-                + ", feeds=" + feeds + "]";
+                + ", feeds=" + outlines + "]";
     }
 }
