@@ -26,7 +26,7 @@ public class OPMLContentHandler extends DefaultHandler {
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
         if (!elements.isEmpty()) {
-            switch(elements.pop()) {
+            switch (elements.pop()) {
             case "TITLE":
                 final StringBuilder sb = new StringBuilder();
                 for (int i = start; i < start + length; i++) {

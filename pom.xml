@@ -15,6 +15,7 @@
     <module>rss-opml</module>
     <module>rss-service</module>
     <module>rss-dynamo</module>
+    <module>rss-atom</module>
   </modules>
 
   <properties>

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" version="2.0">
+
+<channel>
+	<title>AWS DevOps Blog</title>
+	<atom:link href="https://aws.amazon.com/blogs/devops/feed/" rel="self" type="application/rss+xml"/>
+	<link>https://aws.amazon.com/blogs/devops/</link>
+	<description/>
+	<lastBuildDate>Wed, 16 May 2018 18:53:46 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	
+	<item>
+		<title>Refining Access to Branches in AWS CodeCommit</title>
+		<link>https://aws.amazon.com/blogs/devops/refining-access-to-branches-in-aws-codecommit/</link>
+		<pubDate>Wed, 16 May 2018 18:53:46 +0000</pubDate>
+		<dc:creator><![CDATA[Chris Barclay]]></dc:creator>
+				<category><![CDATA[AWS CodeCommit]]></category>
+		<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">d44a66471c0799866b62bdb57f96616094e710f0</guid>
+		<description>Thanks to Susan Ferrell,&amp;nbsp;Senior Technical Writer, for a great blog post on how to use CodeCommit branch-level permissions. —- AWS CodeCommit users have been asking for a way to restrict commits to some repository branches to just a few people. In this blog post, we’re going to show you how to do that by creating […]</description>
+				<content:encoded>&lt;p&gt;Thanks to Susan Ferrell,&amp;nbsp;Senior Technical Writer, for a great blog post on how to use CodeCommit branch-level permissions.&lt;br /&gt; —-&lt;/p&gt; 
+&lt;p&gt;AWS CodeCommit users have been asking for a way to restrict commits to some repository branches to just a few people. In this blog post, we’re going to show you how to do that by creating and applying a &lt;em&gt;conditional policy&lt;/em&gt;, an &lt;a href="https://aws.amazon.com/iam/"&gt;AWS Identity and Access Management&lt;/a&gt; (IAM) policy that contains a context key.&lt;/p&gt; 
+&lt;h2&gt;Why would I do this?&lt;/h2&gt; 
+&lt;p&gt;When you create a branch in an &lt;a href="https://aws.amazon.com/codecommit/"&gt;AWS CodeCommit&lt;/a&gt; repository, the branch is available, by default, to all repository users. Here are some scenarios in which refining access might help you:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;You maintain a branch in a repository for production-ready code, and you don’t want to allow changes to this branch except from a select group of people.&lt;/li&gt; 
+ &lt;li&gt;You want to limit the number of people who can make changes to the default branch in a repository.&lt;/li&gt; 
+ &lt;li&gt;You want to ensure that pull requests cannot be merged to a branch except by an approved group of developers.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;We’ll show you how to create a policy in IAM that prevents users from pushing commits to and merging pull requests to a branch named &lt;strong&gt;master&lt;/strong&gt;. You’ll attach that policy to one group or role in IAM, and then test how users in that group are affected when that policy is applied. We’ll explain how it works, so you can create custom policies for your repositories.&lt;/p&gt; 
+&lt;h2&gt;What you need to get started&lt;/h2&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;You’ll need to sign in to AWS with sufficient permissions to: 
+  &lt;ul&gt; 
+   &lt;li style="list-style-type: none"&gt; 
+    &lt;ul&gt; 
+     &lt;li&gt;Create and apply policies in IAM.&lt;/li&gt; 
+     &lt;li&gt;Create groups in IAM.&lt;/li&gt; 
+     &lt;li&gt;Add users to those groups.&lt;/li&gt; 
+     &lt;li&gt;Apply policies to those groups.&lt;/li&gt; 
+    &lt;/ul&gt; &lt;/li&gt; 
+  &lt;/ul&gt; &lt;p&gt;You can use existing IAM groups, but because you’re going to be changing permissions, you might want to first test this out on groups and users you’ve created specifically for this purpose.&lt;/p&gt;&lt;/li&gt; 
+ &lt;li&gt;You’ll need a repository in AWS CodeCommit with at least two branches: &lt;strong&gt;master&lt;/strong&gt; and &lt;strong&gt;test-branch&lt;/strong&gt;. For information about how to create repositories, see &lt;a href="https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-create-repository.html"&gt;Create a Repository&lt;/a&gt;. For information about how to create branches, see &lt;a href="https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-create-branch.html"&gt;Create a Branch&lt;/a&gt;. In this blog post, we’ve named the repository MyDemoRepo. You can use an existing repository with branches of another name, if you prefer.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Let’s get started!&lt;/p&gt; 
+&lt;h2&gt;Create two groups in IAM&lt;/h2&gt; 
+&lt;p&gt;We’re going to set up two groups in IAM: Developers and Senior_Developers. To start, both groups will have the same managed policy, &lt;strong&gt;AWSCodeCommitPowerUsers&lt;/strong&gt;, applied. Users in each group will have exactly the same permissions to perform actions in IAM.&lt;/p&gt; 
+&lt;p&gt;&lt;img class="alignnone size-full wp-image-2381" src="https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2018/05/04/branch-policy1.png" alt="" width="797" height="350" /&gt;&lt;/p&gt; 
+&lt;p&gt;&lt;em&gt;Figure 1: Two example groups in IAM, with distinct users but the same managed policy applied to each group&lt;/em&gt;&lt;/p&gt; 
+&lt;p&gt;First, create the Developers group.&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Sign in to the AWS Management Console and open the IAM console at &lt;a href="https://console.aws.amazon.com/iam/"&gt;https://console.aws.amazon.com/iam/&lt;/a&gt;.&lt;/li&gt; 
+ &lt;li&gt;In the navigation pane, choose &lt;strong&gt;Groups&lt;/strong&gt;, and then choose &lt;strong&gt;Create New Group&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;In the &lt;strong&gt;Group Name&lt;/strong&gt; box, type &lt;strong&gt;Developers&lt;/strong&gt;, and then choose &lt;strong&gt;Next Step&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;In the list of policies, select the check box for &lt;strong&gt;AWSCodeCommitPowerUsers&lt;/strong&gt;, then choose &lt;strong&gt;Next Step&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Create Group&lt;/strong&gt;.&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;Now, follow these steps to create the Senior_Developers group and attach the &lt;strong&gt;AWSCodeCommitPowerUsers&lt;/strong&gt; managed policy. You now have two empty groups with the same policy attached.&lt;/p&gt; 
+&lt;h2&gt;Create users in IAM&lt;/h2&gt; 
+&lt;p&gt;Next, add at least one unique user to each group. You can use existing IAM users, but because you’ll be affecting their access to AWS CodeCommit, you might want to create two users just for testing purposes. Let’s go ahead and create Arnav and Mary.&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;In the navigation pane, choose &lt;strong&gt;Users&lt;/strong&gt;, and then choose &lt;strong&gt;Add user&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;For the new user, type Arnav_Desai.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Add another user&lt;/strong&gt;, and then type Mary_Major.&lt;/li&gt; 
+ &lt;li&gt;Select the type of access (programmatic access, access to the AWS Management Console, or both). In this blog post, we’ll be testing everything from the console, but if you want to test AWS CodeCommit using the AWS CLI, make sure you include programmatic access and console access.&lt;/li&gt; 
+ &lt;li&gt;For &lt;strong&gt;Console password type&lt;/strong&gt;, choose &lt;strong&gt;Custom password&lt;/strong&gt;. Each user is assigned the password that you type in the box. Write these down so you don’t forget them. You’ll need to sign in to the console using each of these accounts.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Next: Permissions&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;On the &lt;strong&gt;Set permissions&lt;/strong&gt; page, choose &lt;strong&gt;Add user to group&lt;/strong&gt;. Add Arnav to the Developers group. Add Mary to the Senior_Developers group.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Next: Review&lt;/strong&gt; to see all of the choices you made up to this point. When you are ready to proceed, choose &lt;strong&gt;Create user&lt;/strong&gt;.&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;Sign in as Arnav, and then follow these steps to go to the &lt;strong&gt;master&lt;/strong&gt; branch and add a file. Then sign in as Mary and follow the same steps.&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Open the AWS CodeCommit console at &lt;a href="https://console.aws.amazon.com/codecommit"&gt;https://console.aws.amazon.com/codecommit&lt;/a&gt;.&lt;/li&gt; 
+ &lt;li&gt;On the &lt;strong&gt;Dashboard&lt;/strong&gt; page, from the list of repositories, choose &lt;strong&gt;MyDemoRepo&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;In the &lt;strong&gt;Code&lt;/strong&gt; view, choose the branch named &lt;strong&gt;master&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Add file&lt;/strong&gt;, and then choose &lt;strong&gt;Create file&lt;/strong&gt;. Type some text or code in the editor.&lt;/li&gt; 
+ &lt;li&gt;Provide information to other users about who added this file to the repository and why. 
+  &lt;ol&gt; 
+   &lt;li&gt;In &lt;strong&gt;Author name&lt;/strong&gt;, type the name of the user (Arnav or Mary).&lt;/li&gt; 
+   &lt;li&gt;In &lt;strong&gt;Email address&lt;/strong&gt;, type an email address so that other repository users can contact you about this change.&lt;/li&gt; 
+   &lt;li&gt;In &lt;strong&gt;Commit message&lt;/strong&gt;, type a brief description to help you remember why you added this file or any other details you might find helpful.&lt;/li&gt; 
+   &lt;li&gt;Type a name for the file.&lt;/li&gt; 
+  &lt;/ol&gt; &lt;/li&gt; 
+ &lt;li&gt;Choose Commit file.&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;Now follow the same steps to add a file in a different branch. (In our example repository, that’s the branch named &lt;strong&gt;test-branch&lt;/strong&gt;.) You should be able to add a file to both branches regardless of whether you’re signed in as Arnav or Mary.&lt;/p&gt; 
+&lt;p&gt;Let’s change that.&lt;/p&gt; 
+&lt;h2&gt;Create a conditional policy in IAM&lt;/h2&gt; 
+&lt;p&gt;You’re going to create a policy in IAM that will deny API actions if certain conditions are met. We want to prevent users with this policy applied from updating a branch named &lt;strong&gt;master&lt;/strong&gt;, but we don’t want to prevent them from viewing the branch, cloning the repository, or creating pull requests that will merge to that branch. For this reason, we want to pick and choose our APIs carefully. Looking at the &lt;a href="https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-permissions-reference.html"&gt;Permissions Reference&lt;/a&gt;, the logical permissions for this are:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;GitPush&lt;/li&gt; 
+ &lt;li&gt;PutFile&lt;/li&gt; 
+ &lt;li&gt;MergePullRequestByFastForward&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Now’s the time to think about what else you might want this policy to do. For example, because we don’t want users with this policy to make changes to this branch, we probably don’t want them to be able to delete it either, right? So let’s add one more permission:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;DeleteBranch&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The branch in which we want to deny these actions is &lt;strong&gt;master&lt;/strong&gt;. The repository in which the branch resides is &lt;em&gt;MyDemoRepo&lt;/em&gt;. We’re going to need more than just the repository name, though. We need the repository ARN. Fortunately, that’s easy to find. Just go to the AWS CodeCommit console, choose the repository, and choose &lt;strong&gt;Settings&lt;/strong&gt;. The repository ARN is displayed on the &lt;strong&gt;General&lt;/strong&gt; tab.&lt;/p&gt; 
+&lt;p&gt;Now we’re ready to create a policy.&lt;br /&gt; 1. Open the IAM console at &lt;a href="https://console.aws.amazon.com/iam/"&gt;https://console.aws.amazon.com/iam/&lt;/a&gt;. Make sure you’re signed in with the account that has sufficient permissions to create policies, and not as Arnav or Mary.&lt;br /&gt; 2. In the navigation pane, choose Policies, and then choose Create policy.&lt;br /&gt; 3. Choose JSON, and then paste in the following:&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-json"&gt;{
+    &amp;quot;Version&amp;quot;: &amp;quot;2012-10-17&amp;quot;,
+    &amp;quot;Statement&amp;quot;: [
+        {
+            &amp;quot;Effect&amp;quot;: &amp;quot;Deny&amp;quot;,
+            &amp;quot;Action&amp;quot;: [
+                &amp;quot;codecommit:GitPush&amp;quot;,
+                &amp;quot;codecommit:DeleteBranch&amp;quot;,
+                &amp;quot;codecommit:PutFile&amp;quot;,
+                &amp;quot;codecommit:MergePullRequestByFastForward&amp;quot;
+            ],
+            &amp;quot;Resource&amp;quot;: &amp;quot;&lt;span style="color: #ff0000"&gt;arn:aws:codecommit:us-east-2:80398EXAMPLE:MyDemoRepo&lt;/span&gt;&amp;quot;,
+            &amp;quot;Condition&amp;quot;: {
+                &amp;quot;StringEqualsIfExists&amp;quot;: {
+                    &amp;quot;codecommit:References&amp;quot;: [
+                        &amp;quot;refs/heads/&lt;span style="color: #ff0000"&gt;master&lt;/span&gt;&amp;quot;   
+                    ]
+                },
+                &amp;quot;Null&amp;quot;: {
+                    &amp;quot;codecommit:References&amp;quot;: false
+                }
+            }
+        }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;You’ll notice a few things here. First, change the repository ARN to the ARN for your repository and include the repository name. Second, if you want to restrict access to a branch with a name different from our example, &lt;strong&gt;master&lt;/strong&gt;, change that reference too.&lt;/p&gt; 
+&lt;p&gt;Now let’s talk about this policy and what it does. You might be wondering why we’re using a Git reference (refs/heads) value instead of just the branch name. The answer lies in how Git references things, and how AWS CodeCommit, as a Git-based repository service, implements its APIs. A branch in Git is a simple pointer (reference) to the SHA-1 value of the head commit for that branch.&lt;/p&gt; 
+&lt;p&gt;You might also be wondering about the second part of the condition, the nullification language. This is necessary because of the way &lt;code&gt;git push&lt;/code&gt; and &lt;code&gt;git-receive-pack&lt;/code&gt; work. Without going into too many technical details, when you attempt to push a change from a local repo to AWS CodeCommit, an initial reference call is made to AWS CodeCommit without any branch information. AWS CodeCommit evaluates that initial call to ensure that:&lt;/p&gt; 
+&lt;p&gt;a) You’re authorized to make calls.&lt;/p&gt; 
+&lt;p&gt;b) A repository exists with the name specified in the initial call. If you left that null out of the policy, users with that policy would be unable to complete any pushes from their local repos to the AWS CodeCommit remote repository at all, regardless of which branch they were trying to push their commits to.&lt;/p&gt; 
+&lt;p&gt;Could you write a policy in such a way that the null is not required? Of course. IAM policy language is flexible. There’s an example of how to do this in the &lt;a href="https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-identity-based-access-control.html#customer-managed-policies"&gt;AWS CodeCommit User Guide&lt;/a&gt;, if you’re curious. But for the purposes of this blog post, let’s continue with this policy as written.&lt;/p&gt; 
+&lt;p&gt;So what have we essentially said in this policy? We’ve asked IAM to deny the relevant CodeCommit permissions if the request is made to the resource &lt;em&gt;MyDemoRepo&lt;/em&gt; and it meets the following condition: the reference is to refs/heads/master. Otherwise, the deny does not apply.&lt;/p&gt; 
+&lt;p&gt;I’m sure you’re wondering if this policy has to be constrained to a specific repository resource like &lt;em&gt;MyDemoRepo&lt;/em&gt;. After all, it would be awfully convenient if a single policy could apply to all branches in any repository in an AWS account, particularly since the default branch in any repository is initially the &lt;strong&gt;master&lt;/strong&gt; branch. Good news! Simply replace the ARN with an *, and your policy will affect ALL branches named &lt;strong&gt;master&lt;/strong&gt; in every AWS CodeCommit repository in your AWS account. Make sure that this is really what you want, though. We suggest you start by limiting the scope to just one repository, and then changing things when you’ve tested it and are happy with how it works.&lt;/p&gt; 
+&lt;p&gt;When you’re sure you’ve modified the policy for your environment, choose &lt;strong&gt;Review policy&lt;/strong&gt; to validate it. Give this policy a name, such as &lt;strong&gt;DenyChangesToMaster&lt;/strong&gt;, provide a description of its purpose, and then choose &lt;strong&gt;Create policy&lt;/strong&gt;.&lt;/p&gt; 
+&lt;p&gt;Now that you have a policy, it’s time to apply and test it.&lt;/p&gt; 
+&lt;h2&gt;Apply the policy to a group&lt;/h2&gt; 
+&lt;p&gt;In theory, you could apply the policy you just created directly to any IAM user, but that really doesn’t scale well. You should apply this policy to a group, if you use IAM groups to manage users, or to a role, if your users assume a role when interacting with AWS resources.&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;In the IAM console, choose &lt;strong&gt;Groups&lt;/strong&gt;, and then choose &lt;strong&gt;Developers&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;On the &lt;strong&gt;Permissions&lt;/strong&gt; tab, choose &lt;strong&gt;Attach Policy&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;DenyChangesToMaster&lt;/strong&gt;, and then choose &lt;strong&gt;Attach policy&lt;/strong&gt;.&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;Your groups now have a critical difference: users in the &lt;strong&gt;Developers&lt;/strong&gt; group have an additional policy applied that restricts their actions in the &lt;strong&gt;master&lt;/strong&gt; branch. In other words, Mary can continue to add files, push commits, and merge pull requests in the &lt;strong&gt;master&lt;/strong&gt; branch, but Arnav cannot.&lt;/p&gt; 
+&lt;p&gt;&lt;img class="alignnone size-full wp-image-2382" src="https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2018/05/04/branch-policy2.png" alt="" width="797" height="402" /&gt;&lt;/p&gt; 
+&lt;p&gt;&lt;em&gt;Figure 2: Two example groups in IAM, one with an additional policy applied that will prevent users in this group from making changes to the master branch&lt;/em&gt;&lt;/p&gt; 
+&lt;p&gt;Test it out. Sign in as Arnav, and do the following:&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Open the AWS CodeCommit console at &lt;a href="https://console.aws.amazon.com/codecommit"&gt;https://console.aws.amazon.com/codecommit&lt;/a&gt;.&lt;/li&gt; 
+ &lt;li&gt;On the &lt;strong&gt;Dashboard&lt;/strong&gt; page, from the list of repositories, choose &lt;strong&gt;MyDemoRepo&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;In the &lt;strong&gt;Code&lt;/strong&gt; view, choose the branch named &lt;strong&gt;master&lt;/strong&gt;.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Add file&lt;/strong&gt;, and then choose &lt;strong&gt;Create file&lt;/strong&gt;, just as you did before. Provide some text, and then add the file name and your user information.&lt;/li&gt; 
+ &lt;li&gt;Choose &lt;strong&gt;Commit file&lt;/strong&gt;.&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;This time you’ll see an error after choosing &lt;strong&gt;Commit file&lt;/strong&gt;. It’s not a pretty message, but at the very end, you’ll see a telling phrase: “explicit deny”. That’s the policy in action. You, as Arnav, are explicitly denied PutFile, which prevents you from adding a file to the &lt;strong&gt;master&lt;/strong&gt; branch. You’ll see similar results if you try other actions denied by that policy, such as deleting the &lt;strong&gt;master&lt;/strong&gt; branch.&lt;/p&gt; 
+&lt;p&gt;Stay signed in as Arnav, but this time add a file to &lt;strong&gt;test-branch&lt;/strong&gt;. You should be able to add a file without seeing any errors. You can create a branch based on the &lt;strong&gt;master&lt;/strong&gt; branch, add a file to it, and create a pull request that will merge to the &lt;strong&gt;master&lt;/strong&gt; branch, all just as before. However, you cannot perform denied actions on that master branch.&lt;/p&gt; 
+&lt;p&gt;Sign out as Arnav and sign in as Mary. You’ll see that as that IAM user, you can add and edit files in the &lt;strong&gt;master&lt;/strong&gt; branch, merge pull requests to it, and even, although we don’t recommend this, delete it.&lt;/p&gt; 
+&lt;h2&gt;Conclusion&lt;/h2&gt; 
+&lt;p&gt;You can use conditional statements in policies in IAM to refine how users interact with your AWS CodeCommit repositories. This blog post showed how to use such a policy to prevent users from making changes to a branch named &lt;strong&gt;master&lt;/strong&gt;. There are many other options. We hope this blog post will encourage you to experiment with AWS CodeCommit, IAM policies, and permissions. If you have any questions or suggestions, we’d love to hear from you.&lt;/p&gt;</content:encoded>
+			</item>
+		<item>
+		<title>Announcing Local Build Support for AWS CodeBuild</title>
+		<link>https://aws.amazon.com/blogs/devops/announcing-local-build-support-for-aws-codebuild/</link>
+		<pubDate>Fri, 04 May 2018 19:46:59 +0000</pubDate>
+		<dc:creator><![CDATA[Karthik Thirugnanasambandam]]></dc:creator>
+				<category><![CDATA[AWS CodeBuild]]></category>
+		<category><![CDATA[Developer Tools]]></category>
+		<category><![CDATA[DevOps]]></category>
+		<category><![CDATA[How-To]]></category>
+		<category><![CDATA[local build]]></category>
+
+		<guid isPermaLink="false">9b8daf59b5eb7b52e5395af51bd01458ced0480c</guid>
+		<description>Today, we’re excited to announce local build support in AWS CodeBuild. AWS CodeBuild&amp;nbsp;is a fully managed build service. There are no servers to provision and scale, or software to install, configure, and operate. You just specify the location of your source code, choose your build settings, and CodeBuild runs build scripts for compiling, testing, and […]</description>
+				<content:encoded>&lt;p&gt;Today, we’re excited to announce local build support in AWS CodeBuild.&lt;/p&gt; 
+&lt;p&gt;&lt;a href="https://aws.amazon.com/codebuild/"&gt;AWS CodeBuild&lt;/a&gt;&amp;nbsp;is a fully managed build service. There are no servers to provision and scale, or software to install, configure, and operate. You just specify the location of your source code, choose your build settings, and CodeBuild runs build scripts for compiling, testing, and packaging your code.&lt;/p&gt; 
+&lt;p&gt;In this blog post, I’ll show you how to set up CodeBuild locally to build and test a sample Java application.&lt;/p&gt; 
+&lt;p&gt;By building an application on a local machine you can:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Test the integrity and contents of a buildspec file locally.&lt;/li&gt; 
+ &lt;li&gt;Test and build an application locally before committing.&lt;/li&gt; 
+ &lt;li&gt;Identify and fix errors quickly from your local development environment.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;Prerequisites&lt;/h3&gt; 
+&lt;p&gt;In this post, I am using &lt;a href="https://aws.amazon.com/cloud9/"&gt;AWS Cloud9&lt;/a&gt; IDE as my development environment.&lt;/p&gt; 
+&lt;p&gt;If you would like to use AWS Cloud9 as your IDE, follow &lt;a href="https://docs.aws.amazon.com/cloud9/latest/user-guide/setup-express.html"&gt;the express setup steps&lt;/a&gt; in the AWS Cloud9 User Guide.&lt;/p&gt; 
+&lt;p&gt;The AWS Cloud9 IDE comes with &lt;a href="https://www.docker.com/community-edition#/download"&gt;Docker&lt;/a&gt; and &lt;a href="https://git-scm.com/downloads"&gt;Git&lt;/a&gt; already installed. If you are going to use your laptop or desktop machine as your development environment, install Docker and Git before you start.&lt;/p&gt; 
+&lt;h3&gt;Steps to build CodeBuild image&amp;nbsp;locally&lt;/h3&gt; 
+&lt;p&gt;Run&amp;nbsp;&lt;em&gt;git clone &lt;a href="https://github.com/aws/aws-codebuild-docker-images.git"&gt;https://github.com/aws/aws-codebuild-docker-images.git&lt;/a&gt;&lt;/em&gt; to download this repository to your local machine.&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-git"&gt;$ git clone https://github.com/aws/aws-codebuild-docker-images.git
+
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;Lets build a local CodeBuild image for JDK 8 environment. The &lt;strong&gt;Dockerfile&lt;/strong&gt; for JDK 8 is present in &lt;em&gt;/aws-codebuild-docker-images/ubuntu/java/openjdk-8&lt;/em&gt;.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt; the &lt;strong&gt;Dockerfile&lt;/strong&gt;&amp;nbsp;to&amp;nbsp;remove the last line &lt;em&gt;ENTRYPOINT [“dockerd-entrypoint.sh”]&lt;/em&gt;&amp;nbsp;and save the file.&lt;/p&gt; 
+&lt;p&gt;Run&amp;nbsp;&lt;em&gt;cd ubuntu/java/openjdk-8&lt;/em&gt;&amp;nbsp;to change the directory in your local workspace.&lt;/p&gt; 
+&lt;p&gt;Run&amp;nbsp;&lt;em&gt;docker build -t aws/codebuild/java:openjdk-8 .&lt;/em&gt;&amp;nbsp;to build the Docker image locally. This command will take few minutes to complete.&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-bash"&gt;$ cd aws-codebuild-docker-images
+$ cd ubuntu/java/openjdk-8
+$ docker build -t aws/codebuild/java:openjdk-8 .&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;&lt;img class="alignnone wp-image-2361 size-full" src="https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2018/05/01/Screen-Shot-2018-04-28-at-12.45.59-PM.png" alt="" width="1258" height="449" /&gt;&lt;/p&gt; 
+&lt;h3&gt;Steps to setup CodeBuild local agent&lt;/h3&gt; 
+&lt;p&gt;Run the following Docker pull command to download the local CodeBuild agent.&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-bash"&gt;$ docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;Now you have the local agent image on your machine and can run a local build.&lt;/p&gt; 
+&lt;p&gt;Run the following git command to download a sample Java project.&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-bash"&gt;$ git clone https://github.com/karthiksambandam/sample-web-app.git&lt;/code&gt;&lt;/pre&gt; 
+&lt;h3&gt;Steps to use the local agent to build a sample project&lt;/h3&gt; 
+&lt;p&gt;Let’s build the sample Java project using the local agent.&lt;/p&gt; 
+&lt;p&gt;Execute the following Docker command to run the local agent and build the sample web app repository you cloned earlier.&lt;/p&gt; 
+&lt;pre&gt;$ docker run -it -v /var/run/docker.sock:/var/run/docker.sock -e &amp;quot;IMAGE_NAME=aws/codebuild/java:openjdk-8&amp;quot; -e &amp;quot;ARTIFACTS=/home/ec2-user/environment/artifacts&amp;quot; -e &amp;quot;SOURCE=/home/ec2-user/environment/sample-web-app&amp;quot; amazon/aws-codebuild-local&lt;/pre&gt; 
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: We&amp;nbsp;need to provide three environment variables namely&amp;nbsp;&amp;nbsp;IMAGE_NAME, SOURCE and ARTIFACTS.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;IMAGE_NAME&lt;/strong&gt;: The&amp;nbsp;name of your build environment image.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;SOURCE&lt;/strong&gt;: The absolute path to your source code directory.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;ARTIFACTS&lt;/strong&gt;:&amp;nbsp;The absolute path to your&amp;nbsp;artifact&amp;nbsp;output&amp;nbsp;folder.&lt;/p&gt; 
+&lt;p&gt;If running on a different operating system, your&amp;nbsp;absolute path&amp;nbsp;may vary:&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;Linux&lt;/strong&gt;: /home/user/…&lt;br /&gt; &lt;strong&gt;MacOS&lt;/strong&gt;: /Users/user/…&lt;/p&gt; 
+&lt;p&gt;When you run the sample project, you get a runtime error that says the YAML file does not exist. This is because a buildspec.yml file is not included in the sample web project. AWS CodeBuild requires a buildspec.yml to run a build. For more information about buildspec.yml, see &lt;a href="https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec-ref-example"&gt;Build Spec Example&lt;/a&gt; in the AWS CodeBuild User Guide.&lt;/p&gt; 
+&lt;p&gt;Let’s add a buildspec.yml file with the following content to the &lt;em&gt;sample-web-app&lt;/em&gt; folder and then rebuild the project.&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="lang-yaml"&gt;version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Build started on `date`
+      - mvn install
+
+artifacts:
+  files:
+    - target/javawebdemo.war
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;&lt;img class="alignnone wp-image-2362 size-full" src="https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2018/05/01/Screen-Shot-2018-04-28-at-2.59.05-PM.png" alt="" width="1261" height="394" /&gt;&lt;/p&gt; 
+&lt;pre&gt;$ docker run -it -v /var/run/docker.sock:/var/run/docker.sock -e &amp;quot;IMAGE_NAME=aws/codebuild/java:openjdk-8&amp;quot; -e &amp;quot;ARTIFACTS=/home/ec2-user/environment/artifacts&amp;quot; -e &amp;quot;SOURCE=/home/ec2-user/environment/sample-web-app&amp;quot; amazon/aws-codebuild-local&lt;/pre&gt; 
+&lt;p&gt;This time your build should be successful. Upon successful execution, look in the /artifacts folder for the final built artifacts.zip file to validate.&lt;/p&gt; 
+&lt;h3&gt;Conclusion:&lt;/h3&gt; 
+&lt;p&gt;In this blog post, I showed you how to quickly set up the CodeBuild local agent to build projects right from your local desktop machine or laptop. As you see, local builds can improve developer productivity by helping you identify and fix errors quickly.&lt;/p&gt; 
+&lt;p&gt;I hope you found this post useful. Feel free to leave your feedback or suggestions in the comments.&lt;/p&gt;</content:encoded>
+			</item>
+	</channel>
+</rss>
