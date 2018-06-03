@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
+import com.sun.org.omg.CORBA.ParDescriptionSeqHelper;
+
 public class AtomContentHandlerTest {
     private AtomContentHandler handler;
     private SAXParserFactory factory;
@@ -85,5 +87,26 @@ public class AtomContentHandlerTest {
                 .addMetadata("sy:updateFrequency", "1")
                 .build();
         assertEquals(expected, handler.getFeed());
+    }
+    
+    @Test
+    public void textAtomExtensions() throws Exception {
+        XMLReader reader = parser.getXMLReader();
+        reader.setContentHandler(handler);
+        reader.parse(new InputSource(getClass().getClassLoader().getResourceAsStream("well_formed_rss.xml")));
+        
+        parser = factory.newSAXParser();
+        reader = parser.getXMLReader();
+        AtomContentHandler handler2 = new AtomContentHandler().extend(new ContentEncodedExtension());
+        reader.setContentHandler(handler2);
+        reader.parse(new InputSource(getClass().getClassLoader().getResourceAsStream("well_formed_rss.xml")));
+        
+        List<IArticle> handlerArticles = handler.getArticles();
+        List<IArticle> handler2Articles = handler2.getArticles();
+        
+        assertEquals(handlerArticles.size(), handler2Articles.size());
+        for (int i = 0; i < handlerArticles.size(); i++) {
+            assertEquals(handlerArticles.get(i).getMetadata().get("content:encoded"), handler2Articles.get(i).getDescription());
+        }
     }
 }

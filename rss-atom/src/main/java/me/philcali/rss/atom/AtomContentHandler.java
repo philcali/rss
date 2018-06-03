@@ -22,11 +22,26 @@ import org.xml.sax.helpers.DefaultHandler;
 public class AtomContentHandler extends DefaultHandler {
     private static final String RSS_FEED_DATE = "EEE, d MMM yyyy HH:mm:ss Z";
     private static final String ATOM_FEED_DATE = "yyyy-MM-dd'T'HH:mm:ss";
+    private final IAtomExtension fallbackExtension;
+    private List<IAtomExtension> extensions = new ArrayList<>();
     private Stack<StringBuilder> contentBuilders;
     private Stack<Article.Builder> stack;
     private List<IArticle> articles;
     private Feed.Builder builder;
     private IFeed feed;
+    
+    public AtomContentHandler(final IAtomExtension fallbackExtension) {
+        this.fallbackExtension = fallbackExtension;
+    }
+    
+    public AtomContentHandler() {
+        this(new DefaultMetadataExtension());
+    }
+    
+    public AtomContentHandler extend(final IAtomExtension extension) {
+        extensions.add(extension);
+        return this;
+    }
     
     @Override
     public void startDocument() throws SAXException {
@@ -101,7 +116,11 @@ public class AtomContentHandler extends DefaultHandler {
                 describingBuilder.withId(content);
                 break;
             default:
-                describingBuilder.addMetadata(tagName, content);
+                extensions.stream()
+                        .filter(ex -> ex.isCapabale(tagName))
+                        .findFirst()
+                        .orElse(fallbackExtension)
+                        .metadata(tagName, content, describingBuilder);
             }
         }
     }

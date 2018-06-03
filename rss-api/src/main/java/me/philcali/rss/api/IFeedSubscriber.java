@@ -1,6 +1,6 @@
 package me.philcali.rss.api;
 
-public interface IFeedSubscriber {
+public interface UFeedSubscriber {
     String getUserId();
     String getFeedId();
 }
