@@ -13,6 +13,7 @@ import me.philcali.oauth.dynamo.ClientConfigRepositoryDynamo;
 import me.philcali.oauth.dynamo.NonceRepositoryDynamo;
 import me.philcali.oauth.dynamo.TokenRepositoryDynamo;
 
+
 @Module
 public class AuthenticationModule {
     public static final String NONCE_TABLE = "Auth.Nonces";
