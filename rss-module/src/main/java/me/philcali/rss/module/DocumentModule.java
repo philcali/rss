@@ -11,7 +11,6 @@ import me.philcali.rss.api.ompl.IDocumentFactory;
 import me.philcali.rss.dynamo.FeedRepositoryDynamo;
 import me.philcali.rss.opml.DocumentFactoryImpl;
 
-
 @Module
 public class DocumentModule {
     public static final String FEEDS_TABLE = "RSS.Feeds";

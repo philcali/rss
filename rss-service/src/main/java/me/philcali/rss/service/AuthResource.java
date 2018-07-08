@@ -15,7 +15,6 @@ import me.philcali.oauth.api.model.IProfile;
 import me.philcali.oauth.api.model.IUserClientConfig;
 import me.philcali.oauth.spi.OAuthProviders;
 import me.philcali.service.annotations.GET;
-import me.philcali.service.annotations.POST;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
 import me.philcali.service.binding.response.UnauthorizedException;
@@ -46,12 +45,13 @@ public class AuthResource {
         return manager.getAuthUrl(nonces.generate(inputType).getId());
     }
 
-    @POST("/oauth/{type}/complete")
+    @GET("/oauth/{type}/complete")
     public IExpiringToken completeAuth(
             @PathParam("type") final String inputType,
             @QueryParam("code") final String code,
             @QueryParam("error") final String error,
             @QueryParam("state") final String state) {
+        // TODO: add cookie / redirect
         return nonces.verify(state, inputType).map(nonce -> {
             final IExpiringAuthManager login = OAuthProviders.getAuthManager(inputType, IExpiringAuthManager.class);
             return Optional.ofNullable(code)

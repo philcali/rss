@@ -9,7 +9,6 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import dagger.Module;
 import dagger.Provides;
 
-
 @Module
 public class DynamoModule {
     @Provides
