@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>me.philcali</groupId>
-      <artifactId>service-reflection</artifactId>
+      <artifactId>service-function</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>

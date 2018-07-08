@@ -24,7 +24,7 @@ public class AuthResource {
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
-    
+
     @Inject
     public AuthResource(
             final INonceRepository nonces,
@@ -34,13 +34,18 @@ public class AuthResource {
         this.credentials = credentials;
         this.tokens = tokens;
     }
-    
+
+    @GET("/")
+    public String getStatusCheck() {
+        return "OK";
+    }
+
     @GET("/oauth/{type}")
     public String getAuthUrl(@PathParam("type") final String inputType) {
         final IAuthManager manager = OAuthProviders.getAuthManager(inputType, IAuthManager.class);
         return manager.getAuthUrl(nonces.generate(inputType).getId());
     }
-    
+
     @POST("/oauth/{type}/complete")
     public IExpiringToken completeAuth(
             @PathParam("type") final String inputType,
@@ -55,7 +60,7 @@ public class AuthResource {
         })
         .orElseThrow(UnauthorizedException::new);
     }
-    
+
     private Function<String, IExpiringToken> persistToken(final IExpiringAuthManager login) {
         return code -> {
             final IExpiringToken token = login.exchange(code);
