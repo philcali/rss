@@ -46,6 +46,11 @@
   </dependencies>
   <build>
   	<plugins>
+  		<plugin>
+  			<groupId>me.philcali</groupId>
+  			<artifactId>service-netty-maven-plugin</artifactId>
+  			<version>0.0.1-SNAPSHOT</version>
+  		</plugin>
       	<plugin>
         	<groupId>org.apache.maven.plugins</groupId>
         	<artifactId>maven-shade-plugin</artifactId>
