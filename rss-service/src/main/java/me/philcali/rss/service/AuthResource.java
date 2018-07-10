@@ -17,9 +17,13 @@ import me.philcali.oauth.spi.OAuthProviders;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
+import me.philcali.service.binding.cookie.CookieImpl;
+import me.philcali.service.binding.response.IResponse;
+import me.philcali.service.binding.response.Response;
 import me.philcali.service.binding.response.UnauthorizedException;
 
 public class AuthResource {
+    private static final String SESSION_NAME = "srss_id";
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
@@ -34,11 +38,6 @@ public class AuthResource {
         this.tokens = tokens;
     }
 
-    @GET("/")
-    public String getStatusCheck() {
-        return "OK";
-    }
-
     @GET("/oauth/{type}")
     public String getAuthUrl(@PathParam("type") final String inputType) {
         final IAuthManager manager = OAuthProviders.getAuthManager(inputType, IAuthManager.class);
@@ -46,16 +45,23 @@ public class AuthResource {
     }
 
     @GET("/oauth/{type}/complete")
-    public IExpiringToken completeAuth(
+    public IResponse completeAuth(
             @PathParam("type") final String inputType,
             @QueryParam("code") final String code,
             @QueryParam("error") final String error,
             @QueryParam("state") final String state) {
-        // TODO: add cookie / redirect
         return nonces.verify(state, inputType).map(nonce -> {
             final IExpiringAuthManager login = OAuthProviders.getAuthManager(inputType, IExpiringAuthManager.class);
             return Optional.ofNullable(code)
                     .map(persistToken(login))
+                    .map(token -> Response.redirect("/")
+                            .withCookies(CookieImpl.builder()
+                                    .withHttpOnly(true)
+                                    .withName(SESSION_NAME)
+                                    .withValue(token.getAccessToken())
+                                    .withMaxAge(token.getExpiresIn())
+                                    .build())
+                            .build())
                     .orElseThrow(() -> new UnauthorizedException(error));
         })
         .orElseThrow(UnauthorizedException::new);
