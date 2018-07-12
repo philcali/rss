@@ -14,6 +14,7 @@ import me.philcali.oauth.api.model.IExpiringToken;
 import me.philcali.oauth.api.model.IProfile;
 import me.philcali.oauth.api.model.IUserClientConfig;
 import me.philcali.oauth.spi.OAuthProviders;
+import me.philcali.oauth.spi.config.IConfigProvider;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
@@ -27,20 +28,23 @@ public class AuthResource {
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
+    private final IConfigProvider provider;
 
     @Inject
     public AuthResource(
             final INonceRepository nonces,
             final IClientConfigRepository credentials,
-            final ITokenRepository tokens) {
+            final ITokenRepository tokens,
+            final IConfigProvider provider) {
         this.nonces = nonces;
         this.credentials = credentials;
         this.tokens = tokens;
+        this.provider = provider;
     }
 
     @GET("/oauth/{type}")
     public String getAuthUrl(@PathParam("type") final String inputType) {
-        final IAuthManager manager = OAuthProviders.getAuthManager(inputType, IAuthManager.class);
+        final IAuthManager manager = OAuthProviders.getAuthManager(inputType, provider, IAuthManager.class);
         return manager.getAuthUrl(nonces.generate(inputType).getId());
     }
 

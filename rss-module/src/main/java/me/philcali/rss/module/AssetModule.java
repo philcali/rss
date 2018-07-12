@@ -8,6 +8,7 @@ import me.philcali.service.assets.AssetResource;
 import me.philcali.service.assets.IAssetLoader;
 import me.philcali.service.assets.LocalAssetLoader;
 
+
 @Module
 public class AssetModule {
     private static final int DEFAULT_MAX_AGE = 86400;

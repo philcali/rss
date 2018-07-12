@@ -12,7 +12,13 @@ import me.philcali.service.annotations.request.TokenFilter;
 import me.philcali.service.assets.AssetResource;
 import me.philcali.service.binding.auth.BearerTokenFilter;
 
-@Component(modules = { DynamoModule.class, AuthenticationModule.class, DocumentModule.class, AssetModule.class })
+@Component(modules = {
+        SystemManagerModule.class,
+        DynamoModule.class,
+        AuthenticationModule.class,
+        DocumentModule.class,
+        AssetModule.class
+})
 @Singleton
 public interface SmartRSSModule {
     @Resource

@@ -43,6 +43,16 @@
       <artifactId>oauth-dynamo</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>me.philcali.oauth</groupId>
+      <artifactId>oauth-google</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>me.philcali.oauth</groupId>
+      <artifactId>oauth-ssm</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
   	<plugins>
