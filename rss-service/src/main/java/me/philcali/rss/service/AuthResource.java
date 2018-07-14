@@ -5,7 +5,6 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import me.philcali.oauth.api.IAuthManager;
 import me.philcali.oauth.api.IClientConfigRepository;
 import me.philcali.oauth.api.IExpiringAuthManager;
 import me.philcali.oauth.api.INonceRepository;
@@ -42,10 +41,14 @@ public class AuthResource {
         this.provider = provider;
     }
 
+    private IExpiringAuthManager getAuthManager(final String inputType) {
+        final ClassLoader loader = getClass().getClassLoader();
+        return OAuthProviders.newAuthManager(provider.getConfig(inputType), loader, IExpiringAuthManager.class);
+    }
+
     @GET("/oauth/{type}")
     public String getAuthUrl(@PathParam("type") final String inputType) {
-        final IAuthManager manager = OAuthProviders.getAuthManager(inputType, provider, IAuthManager.class);
-        return manager.getAuthUrl(nonces.generate(inputType).getId());
+        return getAuthManager(inputType).getAuthUrl(nonces.generate(inputType).getId());
     }
 
     @GET("/oauth/{type}/complete")
@@ -55,7 +58,7 @@ public class AuthResource {
             @QueryParam("error") final String error,
             @QueryParam("state") final String state) {
         return nonces.verify(state, inputType).map(nonce -> {
-            final IExpiringAuthManager login = OAuthProviders.getAuthManager(inputType, IExpiringAuthManager.class);
+            final IExpiringAuthManager login = getAuthManager(inputType);
             return Optional.ofNullable(code)
                     .map(persistToken(login))
                     .map(token -> Response.redirect("/")
