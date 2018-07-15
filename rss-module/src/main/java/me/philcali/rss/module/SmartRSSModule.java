@@ -15,6 +15,7 @@ import me.philcali.service.binding.auth.BearerTokenFilter;
 @Component(modules = {
         SystemManagerModule.class,
         DynamoModule.class,
+        ConfigModule.class,
         AuthenticationModule.class,
         DocumentModule.class,
         AssetModule.class

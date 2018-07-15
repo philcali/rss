@@ -6,10 +6,6 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 
 import dagger.Module;
 import dagger.Provides;
-import me.philcali.config.api.IConfigFactory;
-import me.philcali.config.proxy.ConfigProxyFactory;
-import me.philcali.config.proxy.ConfigProxyFactoryOptions;
-import me.philcali.config.proxy.name.DefaultParameterGroupPrefix;
 import me.philcali.oauth.api.IClientConfigRepository;
 import me.philcali.oauth.api.INonceRepository;
 import me.philcali.oauth.api.ITokenRepository;
@@ -19,8 +15,6 @@ import me.philcali.oauth.dynamo.TokenRepositoryDynamo;
 
 @Module
 public class AuthenticationModule {
-    public static final String ENV = "Prod";
-    public static final String APPLICATION_NAME = "SmartRSS";
     public static final String NONCE_TABLE = "Auth.Nonces";
     public static final String TOKEN_TABLE = "Auth.Tokens";
     public static final String CONFIG_TABLE = "Auth.Clients";
@@ -41,15 +35,5 @@ public class AuthenticationModule {
     @Singleton
     static IClientConfigRepository providesClientConfigRepository(final DynamoDB dynamoDb) {
         return new ClientConfigRepositoryDynamo(dynamoDb.getTable(CONFIG_TABLE));
-    }
-
-    @Provides
-    @Singleton
-    static IConfigFactory providesAuthConfigProvider() {
-        return new ConfigProxyFactory(ConfigProxyFactoryOptions.builder()
-                .withGroupPrefix(new DefaultParameterGroupPrefix()
-                        .addPart(ENV)
-                        .addPart(APPLICATION_NAME))
-                .build());
     }
 }
