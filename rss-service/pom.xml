@@ -15,6 +15,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
+        	<groupId>me.philcali</groupId>
+        	<artifactId>config-api</artifactId>
+        	<version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>me.philcali</groupId>
             <artifactId>service-annotations</artifactId>
             <version>0.0.1-SNAPSHOT</version>

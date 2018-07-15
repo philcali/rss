@@ -5,15 +5,16 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import me.philcali.config.api.IConfigFactory;
 import me.philcali.oauth.api.IClientConfigRepository;
 import me.philcali.oauth.api.IExpiringAuthManager;
 import me.philcali.oauth.api.INonceRepository;
 import me.philcali.oauth.api.ITokenRepository;
+import me.philcali.oauth.api.model.IClientConfig;
 import me.philcali.oauth.api.model.IExpiringToken;
 import me.philcali.oauth.api.model.IProfile;
 import me.philcali.oauth.api.model.IUserClientConfig;
 import me.philcali.oauth.spi.OAuthProviders;
-import me.philcali.oauth.spi.config.IConfigProvider;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
@@ -27,23 +28,23 @@ public class AuthResource {
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
-    private final IConfigProvider provider;
+    private final IConfigFactory factory;
 
     @Inject
     public AuthResource(
             final INonceRepository nonces,
             final IClientConfigRepository credentials,
             final ITokenRepository tokens,
-            final IConfigProvider provider) {
+            final IConfigFactory factory) {
         this.nonces = nonces;
         this.credentials = credentials;
         this.tokens = tokens;
-        this.provider = provider;
+        this.factory = factory;
     }
 
     private IExpiringAuthManager getAuthManager(final String inputType) {
-        final ClassLoader loader = getClass().getClassLoader();
-        return OAuthProviders.newAuthManager(provider.getConfig(inputType), loader, IExpiringAuthManager.class);
+        final IClientConfig config = factory.create(IClientConfig.class, Optional.ofNullable(inputType));
+        return OAuthProviders.newAuthManager(config, getClass().getClassLoader(), IExpiringAuthManager.class);
     }
 
     @GET("/oauth/{type}")
