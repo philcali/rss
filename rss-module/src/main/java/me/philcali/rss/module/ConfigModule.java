@@ -1,5 +1,7 @@
 package me.philcali.rss.module;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -15,6 +17,7 @@ import me.philcali.config.cache.event.CacheEventType;
 import me.philcali.config.cache.event.CacheFanOutCommandExecution;
 import me.philcali.config.cache.event.ICacheEventPublisher;
 import me.philcali.config.cache.update.CacheConfigUpdateStrategyBuilder;
+import me.philcali.config.cache.update.CacheEvictionPolicy;
 import me.philcali.config.proxy.ConfigProxyFactory;
 import me.philcali.config.proxy.ConfigProxyFactoryOptions;
 import me.philcali.config.proxy.name.DefaultParameterGroupPrefix;
@@ -39,7 +42,10 @@ public class ConfigModule {
     @Provides
     @Singleton
     static ICacheUpdateStrategy providesCacheUpdateStrategy(final CacheFanOutCommandExecution executions) {
-        return CacheConfigUpdateStrategyBuilder.sourceUpdating()
+        return CacheConfigUpdateStrategyBuilder.neverUpdating()
+                .withEvictionPolicy(CacheEvictionPolicy.TIME_BASED)
+                .withEvictionTimeUnit(TimeUnit.SECONDS)
+                .withEvictionAmount(30)
                 .withCommandExecution(executions)
                 .build();
     }
@@ -48,8 +54,12 @@ public class ConfigModule {
     @Singleton
     static IConfigProvider providesCachingConfigProvider(final ICacheEventPublisher events,
             final ICacheUpdateStrategy cacheUpdate) {
-        cacheUpdate.run();
-        return new CachedConfigProvider(new DefaultConfigProviderChain(), events, CacheInitializationPolicy.FILL);
+        return CachedConfigProvider.builder()
+                .withConfigProvider(new DefaultConfigProviderChain())
+                .withEventPublisher(events)
+                .withInitializationPolicy(CacheInitializationPolicy.FILL)
+                .withUpdateStrategy(cacheUpdate)
+                .build();
     }
 
     @Provides
