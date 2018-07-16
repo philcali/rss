@@ -18,6 +18,7 @@ import me.philcali.oauth.spi.OAuthProviders;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
+import me.philcali.service.annotations.response.StatusCode;
 import me.philcali.service.binding.cookie.CookieImpl;
 import me.philcali.service.binding.response.IResponse;
 import me.philcali.service.binding.response.Response;
@@ -48,11 +49,15 @@ public class AuthResource {
     }
 
     @GET("/oauth/{type}")
-    public String getAuthUrl(@PathParam("type") final String inputType) {
-        return getAuthManager(inputType).getAuthUrl(nonces.generate(inputType).getId());
+    @StatusCode(302)
+    public IResponse getAuthUrl(@PathParam("type") final String inputType) {
+        return Response.builder()
+                .withHeaders("Location", getAuthManager(inputType).getAuthUrl(nonces.generate(inputType).getId()))
+                .build();
     }
 
     @GET("/oauth/{type}/complete")
+    @StatusCode(302)
     public IResponse completeAuth(
             @PathParam("type") final String inputType,
             @QueryParam("code") final String code,
@@ -64,6 +69,7 @@ public class AuthResource {
                     .map(persistToken(login))
                     .map(token -> Response.redirect("/")
                             .withCookies(CookieImpl.builder()
+                                    .withPath("/")
                                     .withHttpOnly(true)
                                     .withName(SESSION_NAME)
                                     .withValue(token.getAccessToken())
@@ -79,9 +85,7 @@ public class AuthResource {
         return code -> {
             final IExpiringToken token = login.exchange(code);
             final IProfile profile = login.me(token);
-            final IUserClientConfig creds = credentials.listByOwners(profile.getEmail()).getItems().stream()
-                    .filter(c -> c.getApi().equals(ServiceAuthorizer.API_TYPE))
-                    .findFirst()
+            final IUserClientConfig creds = credentials.getByOwner(profile.getEmail(), ServiceAuthorizer.API_TYPE)
                     .orElseGet(() -> credentials.generate(profile.getEmail(), ServiceAuthorizer.API_TYPE));
             return tokens.generate(creds);
         };
