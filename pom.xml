@@ -15,6 +15,8 @@
     <module>rss-dynamo</module>
     <module>rss-atom</module>
     <module>rss-module</module>
+    <module>rss-module-website</module>
+    <module>rss-module-api</module>
   </modules>
 
   <properties>

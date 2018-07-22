@@ -1,5 +1,6 @@
 package me.philcali.rss.service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -67,8 +68,8 @@ public class AuthResource {
                                     .withPath("/")
                                     .withHttpOnly(true)
                                     .withName(SESSION_NAME)
+                                    .withExpires(new Date(token.getExpiresIn() * 1000))
                                     .withValue(token.getAccessToken())
-                                    .withMaxAge(token.getExpiresIn())
                                     .build())
                             .build())
                     .orElseThrow(() -> new UnauthorizedException(error));

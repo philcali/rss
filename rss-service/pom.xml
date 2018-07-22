@@ -30,8 +30,13 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
+        	<groupId>javax.inject</groupId>
+        	<artifactId>javax.inject</artifactId>
+        	<version>1</version>
+        </dependency>
+        <dependency>
             <groupId>me.philcali</groupId>
-            <artifactId>service-assets</artifactId>
+            <artifactId>service-reflection</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>

@@ -66,33 +66,7 @@
   </dependencies>
   <build>
   	<plugins>
-      	<plugin>
-        	<groupId>org.apache.maven.plugins</groupId>
-        	<artifactId>maven-shade-plugin</artifactId>
-        	<version>3.1.1</version>
-        	<configuration>
-          		<!-- put your configurations here -->
-        	</configuration>
-        	<executions>
-          		<execution>
-            		<phase>package</phase>
-            		<goals>
-              			<goal>shade</goal>
-            		</goals>
-          		</execution>
-        	</executions>
-        </plugin>
-        <plugin>
-  			<groupId>me.philcali</groupId>
-  			<artifactId>service-netty-maven-plugin</artifactId>
-  			<version>0.0.1-SNAPSHOT</version>
-  			<configuration>
-  				<jvmArgs>
-  					<jvmArg>aws.region=us-east-1</jvmArg>
-  				</jvmArgs>
-  			</configuration>
-  		</plugin>
-  		<plugin>
+		<plugin>
   			<groupId>org.apache.maven.plugins</groupId>
   			<artifactId>maven-compiler-plugin</artifactId>
   			<configuration>

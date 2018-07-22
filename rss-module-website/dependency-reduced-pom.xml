@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>rss</artifactId>
+    <groupId>me.philcali</groupId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>rss-module-website</artifactId>
+  <name>rss-module-website</name>
+  <url>http://maven.apache.org</url>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration />
+      </plugin>
+      <plugin>
+        <groupId>me.philcali</groupId>
+        <artifactId>service-netty-maven-plugin</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <configuration>
+          <jvmArgs>
+            <jvmArg>aws.region=us-east-1</jvmArg>
+          </jvmArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+</project>

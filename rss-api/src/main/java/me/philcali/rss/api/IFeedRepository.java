@@ -7,8 +7,8 @@ import me.philcali.db.api.QueryResult;
 
 public interface IFeedRepository {
     QueryResult<IFeed> list(QueryParams params);
-    
+
     Optional<IFeed> get(String id);
-    
+
     void put(IFeed feed);
 }
