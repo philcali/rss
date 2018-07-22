@@ -1,20 +1,20 @@
 package me.philcali.rss.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import me.philcali.config.api.IConfigFactory;
+import me.philcali.oauth.api.IAuthManager;
 import me.philcali.oauth.api.IClientConfigRepository;
 import me.philcali.oauth.api.IExpiringAuthManager;
 import me.philcali.oauth.api.INonceRepository;
 import me.philcali.oauth.api.ITokenRepository;
-import me.philcali.oauth.api.model.IClientConfig;
 import me.philcali.oauth.api.model.IExpiringToken;
 import me.philcali.oauth.api.model.IProfile;
 import me.philcali.oauth.api.model.IUserClientConfig;
-import me.philcali.oauth.spi.OAuthProviders;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
@@ -29,30 +29,25 @@ public class AuthResource {
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
-    private final IConfigFactory factory;
+    private final Map<String, IAuthManager> typeToManager;
 
     @Inject
     public AuthResource(
             final INonceRepository nonces,
             final IClientConfigRepository credentials,
             final ITokenRepository tokens,
-            final IConfigFactory factory) {
+            final Map<String, IAuthManager> typeToManager) {
         this.nonces = nonces;
         this.credentials = credentials;
         this.tokens = tokens;
-        this.factory = factory;
-    }
-
-    private IExpiringAuthManager getAuthManager(final String inputType) {
-        final IClientConfig config = factory.create(IClientConfig.class, Optional.ofNullable(inputType));
-        return OAuthProviders.newAuthManager(config, getClass().getClassLoader(), IExpiringAuthManager.class);
+        this.typeToManager = typeToManager;
     }
 
     @GET("/oauth/{type}")
     @StatusCode(302)
     public IResponse getAuthUrl(@PathParam("type") final String inputType) {
         return Response.builder()
-                .withHeaders("Location", getAuthManager(inputType).getAuthUrl(nonces.generate(inputType).getId()))
+                .withHeaders("Location", typeToManager.get(inputType).getAuthUrl(nonces.generate(inputType).getId()))
                 .build();
     }
 
@@ -64,9 +59,9 @@ public class AuthResource {
             @QueryParam("error") final String error,
             @QueryParam("state") final String state) {
         return nonces.verify(state, inputType).map(nonce -> {
-            final IExpiringAuthManager login = getAuthManager(inputType);
+            final IExpiringAuthManager login = (IExpiringAuthManager) typeToManager.get(inputType);
             return Optional.ofNullable(code)
-                    .map(persistToken(login))
+                    .map(persistToken(inputType, login))
                     .map(token -> Response.redirect("/")
                             .withCookies(CookieImpl.builder()
                                     .withPath("/")
@@ -81,13 +76,18 @@ public class AuthResource {
         .orElseThrow(UnauthorizedException::new);
     }
 
-    private Function<String, IExpiringToken> persistToken(final IExpiringAuthManager login) {
+    private Function<String, IExpiringToken> persistToken(final String type, final IExpiringAuthManager login) {
         return code -> {
             final IExpiringToken token = login.exchange(code);
             final IProfile profile = login.me(token);
             final IUserClientConfig creds = credentials.getByOwner(profile.getEmail(), ServiceAuthorizer.API_TYPE)
                     .orElseGet(() -> credentials.generate(profile.getEmail(), ServiceAuthorizer.API_TYPE));
-            return tokens.generate(creds);
+            final Map<String, String> params = new HashMap<>();
+            params.put("type", type);
+            params.put("accessToken", token.getAccessToken());
+            // Save this reference for now
+            tokens.put(token);
+            return tokens.generate(creds, params);
         };
     }
 }
