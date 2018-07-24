@@ -63,6 +63,16 @@
       <artifactId>config-cache</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>me.philcali</groupId>
+      <artifactId>service-assets-proxy</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>me.philcali.http</groupId>
+      <artifactId>http-java</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
   	<plugins>

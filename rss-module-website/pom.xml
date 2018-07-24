@@ -50,6 +50,11 @@
       <version>2.16</version>
     </dependency>
     <dependency>
+      <groupId>me.philcali</groupId>
+      <artifactId>config-system</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>${project.parent.groupId}</groupId>
       <artifactId>rss-module</artifactId>
       <version>${project.parent.version}</version>
