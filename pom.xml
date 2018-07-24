@@ -17,6 +17,7 @@
     <module>rss-module</module>
     <module>rss-module-website</module>
     <module>rss-module-api</module>
+    <module>rss-module-asset</module>
   </modules>
 
   <properties>
