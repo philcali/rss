@@ -7,12 +7,12 @@ import me.philcali.rss.api.ompl.IDocument;
 import me.philcali.rss.api.ompl.IDocumentFactory;
 import me.philcali.service.annotations.POST;
 import me.philcali.service.annotations.request.Authorizer;
-import me.philcali.service.annotations.request.FormParam;
+import me.philcali.service.annotations.request.Body;
 
 public class OPMLResource {
     private final IDocumentFactory factory;
     private final IFeedRepository feeds;
-    
+
     @Inject
     public OPMLResource(
             final IDocumentFactory factory,
@@ -20,10 +20,10 @@ public class OPMLResource {
         this.factory = factory;
         this.feeds = feeds;
     }
-    
+
     @POST("/opml/import")
     @Authorizer(ServiceAuthorizer.class)
-    public IDocument omplImport(@FormParam("document") final String contents) {
+    public IDocument omplImport(@Body final String contents) {
         return factory.create(contents);
     }
 }

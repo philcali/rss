@@ -1,7 +1,6 @@
 package me.philcali.rss.service;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -16,6 +15,9 @@ import me.philcali.oauth.api.ITokenRepository;
 import me.philcali.oauth.api.model.IExpiringToken;
 import me.philcali.oauth.api.model.IProfile;
 import me.philcali.oauth.api.model.IUserClientConfig;
+import me.philcali.rss.api.IUserSettings;
+import me.philcali.rss.api.IUserSettingsRepository;
+import me.philcali.rss.api.model.UserSettings;
 import me.philcali.service.annotations.GET;
 import me.philcali.service.annotations.request.PathParam;
 import me.philcali.service.annotations.request.QueryParam;
@@ -30,6 +32,7 @@ public class AuthResource {
     private final INonceRepository nonces;
     private final IClientConfigRepository credentials;
     private final ITokenRepository tokens;
+    private final IUserSettingsRepository settings;
     private final Map<String, IAuthManager> typeToManager;
 
     @Inject
@@ -37,11 +40,13 @@ public class AuthResource {
             final INonceRepository nonces,
             final IClientConfigRepository credentials,
             final ITokenRepository tokens,
+            final IUserSettingsRepository settings,
             final Map<String, IAuthManager> typeToManager) {
         this.nonces = nonces;
         this.credentials = credentials;
         this.tokens = tokens;
         this.typeToManager = typeToManager;
+        this.settings = settings;
     }
 
     @GET("/oauth/{type}")
@@ -66,7 +71,6 @@ public class AuthResource {
                     .map(token -> Response.redirect("/")
                             .withCookies(CookieImpl.builder()
                                     .withPath("/")
-                                    .withHttpOnly(true)
                                     .withName(SESSION_NAME)
                                     .withExpires(new Date(token.getExpiresIn() * 1000))
                                     .withValue(token.getAccessToken())
@@ -83,12 +87,17 @@ public class AuthResource {
             final IProfile profile = login.me(token);
             final IUserClientConfig creds = credentials.getByOwner(profile.getEmail(), ServiceAuthorizer.API_TYPE)
                     .orElseGet(() -> credentials.generate(profile.getEmail(), ServiceAuthorizer.API_TYPE));
-            final Map<String, String> params = new HashMap<>();
-            params.put("type", type);
-            params.put("accessToken", token.getAccessToken());
-            // Save this reference for now
-            tokens.put(token);
-            return tokens.generate(creds, params);
+            final IUserSettings userSettings = settings.get(profile.getEmail())
+                    .orElseGet(() -> {
+                        final UserSettings us = new UserSettings();
+                        us.setEmail(profile.getEmail());
+                        us.setPhoto(profile.getImage());
+                        us.setFirstName(profile.getFirstName());
+                        us.setLastName(profile.getLastName());
+                        return us;
+                    });
+            settings.put(userSettings);
+            return tokens.generate(creds);
         };
     }
 }

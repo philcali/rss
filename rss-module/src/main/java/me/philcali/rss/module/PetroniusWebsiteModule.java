@@ -9,7 +9,8 @@ import me.philcali.service.annotations.Resource;
 @Component(modules = {
         DynamoModule.class,
         ConfigModule.class,
-        AuthenticationModule.class
+        AuthenticationModule.class,
+        UserModule.class
 })
 @Singleton
 public interface PetroniusWebsiteModule {

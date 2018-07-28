@@ -15,6 +15,7 @@ import me.philcali.service.binding.auth.BearerTokenFilter;
         DynamoModule.class,
         ConfigModule.class,
         AuthenticationModule.class,
+        UserModule.class,
         DocumentModule.class
 })
 @Singleton
