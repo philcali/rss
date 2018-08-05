@@ -16,7 +16,9 @@ import me.philcali.service.binding.auth.BearerTokenFilter;
         ConfigModule.class,
         AuthenticationModule.class,
         UserModule.class,
-        DocumentModule.class
+        HttpModule.class,
+        DocumentModule.class,
+        S3Module.class
 })
 @Singleton
 public interface PetroniusServiceModule {

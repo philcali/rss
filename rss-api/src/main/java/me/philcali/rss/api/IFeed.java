@@ -9,6 +9,7 @@ public interface IFeed {
     String getTitle();
     String getDescription();
     String getUri();
+    String getHtmlUri();
     Date getUpdatedAt();
     List<String> getCategories();
     Map<String, String> getMetadata();

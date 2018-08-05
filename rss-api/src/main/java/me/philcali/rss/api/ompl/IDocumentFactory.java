@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+@FunctionalInterface
 public interface IDocumentFactory {
     IDocument create(InputStream input) throws DocumentCreationException;
 

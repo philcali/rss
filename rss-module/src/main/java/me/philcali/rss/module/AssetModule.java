@@ -12,7 +12,6 @@ import dagger.Module;
 import dagger.Provides;
 import me.philcali.config.api.IConfigFactory;
 import me.philcali.http.api.IHttpClient;
-import me.philcali.http.java.NativeHttpClient;
 import me.philcali.service.assets.AssetResource;
 import me.philcali.service.assets.IAssetLoader;
 
@@ -20,12 +19,6 @@ import me.philcali.service.assets.IAssetLoader;
 public class AssetModule {
     private static final int MAX_AGE = 5;
     private static final String LOCATION = "Location";
-
-    @Provides
-    @Singleton
-    static IHttpClient providesHttpClient() {
-        return new NativeHttpClient();
-    }
 
     @Provides
     @Singleton

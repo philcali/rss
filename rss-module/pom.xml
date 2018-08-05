@@ -39,6 +39,11 @@
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
+      <groupId>${project.parent.groupId}</groupId>
+      <artifactId>rss-atom</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
       <groupId>me.philcali.oauth</groupId>
       <artifactId>oauth-dynamo</artifactId>
       <version>0.0.1-SNAPSHOT</version>
