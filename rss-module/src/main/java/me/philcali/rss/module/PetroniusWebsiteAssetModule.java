@@ -8,6 +8,7 @@ import me.philcali.service.assets.AssetResource;
 
 @Component(modules = {
     ConfigModule.class,
+    JacksonModule.class,
     HttpModule.class,
     AssetModule.class
 })

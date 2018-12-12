@@ -79,7 +79,7 @@ public class DocumentModule {
     @Provides
     @Singleton
     static IFeedRepository providesFeedRepository(final DynamoDB dynamoDb) {
-        return new FeedRepositoryDynamo(dynamoDb.getTable(FEEDS_TABLE));
+        return new FeedRepositoryDynamo(dynamoDb, dynamoDb.getTable(FEEDS_TABLE));
     }
 
     @Provides

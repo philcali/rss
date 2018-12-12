@@ -4,8 +4,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dagger.Module;
 import dagger.Provides;
 import me.philcali.config.api.IConfigFactory;
@@ -28,12 +26,6 @@ import me.philcali.config.proxy.name.DefaultParameterGroupPrefix;
 public class ConfigModule {
     public static final String ENV = "Prod";
     public static final String APPLICATION_NAME = "SmartRSS";
-
-    @Provides
-    @Singleton
-    static ObjectMapper getObjectMapper() {
-        return new ObjectMapper();
-    }
 
     @Provides
     @Singleton
